@@ -5064,156 +5064,7 @@ function filtrarPorCategoria(categoria) {
                 console.error('Erro ao mostrar campos específicos:', e);
             }
         }
-        
-        // Função para finalizar o pedido
-        function finalizarPedido() {
-            console.log('Finalizando pedido');
-            
-            // Obter dados do formulário
-            const nomeCliente = document.getElementById('nome-cliente').value.trim();
-            const observacaoGeral = document.getElementById('observacao-geral').value.trim();
-            
-            // Obter dados específicos conforme opção selecionada
-            let mesaComanda = '';
-            let enderecoEntrega = '';
-            
-            if (opcaoEntregaSelecionada === 'local') {
-                mesaComanda = document.getElementById('mesa-comanda').value.trim();
-            } else if (opcaoEntregaSelecionada === 'delivery') {
-                enderecoEntrega = document.getElementById('endereco-entrega').value.trim();
-                
-                // Validar endereço para delivery
-                if (!enderecoEntrega) {
-                    alert('Por favor, informe o endereço de entrega para continuar.');
-                    document.getElementById('endereco-entrega').focus();
-                    return;
-                }
-            }
-            
-            // Validar nome do cliente (obrigatório)
-            if (!nomeCliente) {
-                alert('Por favor, informe seu nome para continuar.');
-                document.getElementById('nome-cliente').focus();
-                return;
-            }
-            
-            // Obter itens do carrinho
-            const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            if (carrinho.length === 0) {
-                alert('Seu carrinho está vazio. Adicione itens para fazer um pedido.');
-                mostrarStep(1);
-                return;
-            }
-            
-            // Montar mensagem do pedido com emojis e melhor formatação
-            let mensagem = `🔔 *NOVO PEDIDO* 🔔\n\n`;
-            
-            // Data e hora do pedido
-            const agora = new Date();
-            const dataFormatada = agora.toLocaleDateString('pt-BR');
-            const horaFormatada = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            mensagem += `📅 *Data*: ${dataFormatada}\n⏰ *Hora*: ${horaFormatada}\n\n`;
-            
-            // Dados do cliente
-            mensagem += `👤 *DADOS DO CLIENTE*\n`;
-            mensagem += `➡️ *Nome*: ${nomeCliente}\n`;
-            
-            // Verificar se o campo de formas de pagamento deve ser exibido
-            let mostrarFormaPagamento = dadosGlobais.config['Step-3-show-formas-de-pag'] === 'Sim';
-                
-            // Verificar se Step-2-opc-1 é "Sim" e se a opção selecionada é "local" (Consumo no Local)
-            if (opcaoEntregaSelecionada === 'local' && dadosGlobais.config['Step-2-opc-1'] === 'Sim') {
-                mostrarFormaPagamento = false;
-            }
-            
-            if (mostrarFormaPagamento) {
-                const formaPagamento = document.getElementById('forma-pagamento');
-                if (formaPagamento && formaPagamento.value && formaPagamento.value !== '') {
-                    const formaPagamentoTexto = formaPagamento.options[formaPagamento.selectedIndex].text;
-                    mensagem += `💳 *Pagamento*: ${formaPagamentoTexto}\n`;
-                    
-                    // Verificar se é pagamento em dinheiro e se precisa de troco
-                    if (formaPagamento.value.toLowerCase() === 'dinheiro') {
-                        const precisaTroco = document.querySelector('input[name="precisa-troco"]:checked');
-                        if (precisaTroco && precisaTroco.value === 'sim') {
-                            const valorTroco = document.getElementById('valor-troco');
-                            if (valorTroco && valorTroco.value.trim()) {
-                                mensagem += `💰 *Troco para*: R$ ${valorTroco.value.trim()}\n`;
-                            } else {
-                                mensagem += `💰 *Precisa de troco*: Sim\n`;
-                            }
-                        } else if (precisaTroco) {
-                            mensagem += `💰 *Precisa de troco*: Não\n`;
-                        }
-                    }
-                }
-            }
-            
-            // Método de envio e dados específicos
-            if (opcaoEntregaSelecionada === 'local') {
-                mensagem += `\n🍽️ *Consumo no Local*\n`;
-                // Verificar se o campo mesa-comanda existe e está preenchido
-                const inputMesaComanda = document.getElementById('mesa-comanda');
-                if (inputMesaComanda && inputMesaComanda.value.trim()) {
-                    mensagem += `📌 *Mesa/Comanda*: ${inputMesaComanda.value.trim()}\n`;
-                } else if (mesaComanda) {
-                    // Usar o valor já capturado no início da função
-                    mensagem += `📌 *Mesa/Comanda*: ${mesaComanda}\n`;
-                }
-            } else if (opcaoEntregaSelecionada === 'delivery') {
-                mensagem += `\n🚗 *Entrega - Delivery*\n`;
-                if (enderecoEntrega) {
-                    mensagem += `🏠 *Endereço*: ${enderecoEntrega}\n`;
-                }
-                // Removida a mensagem de taxa de entrega conforme solicitado
-            } else if (opcaoEntregaSelecionada === 'retirada') {
-                mensagem += `\n🛍️ *Cliente vai Retirar no Local*\n`;
-            }
-            
-            // Observações gerais
-            if (observacaoGeral) {
-                mensagem += `\n💬 *OBSERVAÇÕES*\n${observacaoGeral}\n`;
-            }
-            
-            // Lista de itens
-            mensagem += `\n🛒 *ITENS DO PEDIDO*\n`;
-            
-            // Adicionar itens do carrinho
-            carrinho.forEach((item, index) => {
-                mensagem += `\n${index + 1}. ${item.titulo} (${item.quantidade}x)`;
-                if (item.observacao) mensagem += `\n   ➡️ _${item.observacao}_`;
-                mensagem += `\n`;
-            });
-            
-            mensagem += `\n✅ *Pedido Finalizado* - Aguardando confirmação do estabelecimento\n`;
-            mensagem += `\n👍 Obrigado pela preferência!`;
-            
-            // Codificar mensagem para URL
-            const mensagemCodificada = encodeURIComponent(mensagem);
-            
-            // Abrir WhatsApp com a mensagem
-            // Obter o número de WhatsApp da planilha de configurações
-            const numeroWhatsApp = dadosGlobais.config['WhatsApp'];
-            if (!numeroWhatsApp) {
-                alert('Número de WhatsApp não configurado na planilha.');
-                return;
-            }
-            
-            // Remover caracteres não numéricos do número
-            const numeroLimpo = numeroWhatsApp.replace(/\D/g, '');
-            
-            // Enviar pedido sem confirmação
-            // Limpar carrinho após envio
-            localStorage.removeItem('carrinho');
-            atualizarContadorCarrinho();
-            resetarFormulario();
-            
-            // Fechar modal
-            fecharModal();
-            
-            // Detectar o dispositivo e enviar o pedido de forma adequada
-            enviarPedidoWhatsApp(numeroLimpo, mensagemCodificada);
-        }
+
         
         // Função auxiliar para obter texto do tipo de entrega
         function getTextoTipoEntrega(tipo) {
@@ -6373,197 +6224,125 @@ function setupDesktopScrollNavigation() {
              * - Abre WhatsApp Web com a mensagem pré-preenchida
              * - Limpa o carrinho após o envio bem-sucedido
              */
+            _limparEResetarInterface: function() {
+                console.log('Sistema resetado após envio do pedido');
+                this.limpar();
+                localStorage.removeItem('carrinho');
+                document.querySelectorAll('input[type="text"], input[type="tel"], textarea').forEach(input => {
+                    input.value = '';
+                });
+                document.querySelectorAll('select').forEach(select => {
+                    if (select.options.length > 0) {
+                        select.selectedIndex = 0;
+                    }
+                });
+                document.querySelectorAll('input[name="metodo-envio"]').forEach(radio => {
+                    radio.checked = false;
+                });
+                fecharModal();
+                document.body.classList.remove('overflow-hidden');
+                document.documentElement.classList.remove('overflow-hidden');
+                this.mostrarStep(1);
+                atualizarContadorCarrinho();
+            },
+
             validarEEnviarPedido: function() {
-                // Validar campos obrigatórios
-                const nome = document.getElementById('cliente-nome');
-                if (!nome.value.trim()) {
+                const nomeInput = document.getElementById('cliente-nome');
+                if (!nomeInput.value.trim()) {
                     alert('Por favor, informe seu nome.');
-                    nome.focus();
+                    nomeInput.focus();
                     return;
                 }
-                
-                // Verificar método de envio selecionado
+
                 let metodoEnvio = '';
                 const exibirStep2 = dadosGlobais.config['Step-2-checkout'] === 'Sim';
                 if (exibirStep2) {
                     const metodoSelecionado = document.querySelector('input[name="metodo-envio"]:checked');
                     if (metodoSelecionado) {
                         metodoEnvio = metodoSelecionado.value;
-                        
-                        // Validações específicas por método
-                        // Padronizando o uso de 'local' em vez de 'consumo' para consistência
                         if (metodoEnvio === 'local') {
-                            const mesaComandaAtivado = dadosGlobais.config['Step-3-mesa-comanda'] === 'Sim';
-                            if (mesaComandaAtivado) {
-                                const mesa = document.getElementById('cliente-mesa');
-                                if (!mesa || !mesa.value.trim()) {
-                                    alert('Por favor, informe o número da mesa/comanda.');
-                                    mesa.focus();
-                                    return;
-                                }
+                            const mesaInput = document.getElementById('cliente-mesa');
+                            if (dadosGlobais.config['Step-3-mesa-comanda'] === 'Sim' && (!mesaInput || !mesaInput.value.trim())) {
+                                alert('Por favor, informe o número da mesa/comanda.');
+                                mesaInput.focus();
+                                return;
                             }
                         } else if (metodoEnvio === 'delivery') {
-                            const endereco = document.getElementById('cliente-endereco');
-                            if (!endereco || !endereco.value.trim()) {
+                            const enderecoInput = document.getElementById('cliente-endereco');
+                            if (!enderecoInput || !enderecoInput.value.trim()) {
                                 alert('Por favor, informe seu endereço completo.');
-                                endereco.focus();
+                                enderecoInput.focus();
                                 return;
                             }
                         }
                     }
                 }
                 
-                // Monta a mensagem para o WhatsApp com emojis e melhor formatação
-                let mensagem = `🔔 *NOVO PEDIDO* 🔔\n\n`;
-                
-                // Data e hora do pedido
+                const formaPagamentoSelect = document.getElementById('cliente-pagamento');
+                if (!formaPagamentoSelect.value) {
+                    alert('Por favor, selecione a forma de pagamento.');
+                    formaPagamentoSelect.focus();
+                    return;
+                }
+
                 const agora = new Date();
-                const dataFormatada = agora.toLocaleDateString('pt-BR');
-                const horaFormatada = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                mensagem += `📅 *Data*: ${dataFormatada}\n⏰ *Hora*: ${horaFormatada}\n\n`;
-                
-                // Dados do cliente
-                mensagem += `👤 *DADOS DO CLIENTE*\n`;
-                mensagem += `➡️ *Nome*: ${nome.value.trim()}\n`;
-                
-                // Forma de pagamento
-                const formaPagamento = document.getElementById('cliente-pagamento');
-                if (formaPagamento && formaPagamento.value && formaPagamento.value !== '') {
-                    const formaPagamentoTexto = formaPagamento.options[formaPagamento.selectedIndex].text;
-                    mensagem += `💳 *Pagamento*: ${formaPagamentoTexto}\n`;
-                }
-                
-                // Método de envio e dados específicos
-                if (exibirStep2) {
-                    const metodoLabel = document.querySelector(`input[value="${metodoEnvio}"]`)?.parentElement?.querySelector('label')?.innerText;
-                    
-                    if (metodoEnvio === 'local') {
-                        mensagem += `🍽️ *Consumo no Local*\n`;
-                        // Verificar se o campo cliente-mesa existe e está preenchido
-                        const mesa = document.getElementById('cliente-mesa');
-                        if (mesa && mesa.value.trim()) {
-                            mensagem += `📌 *Mesa/Comanda*: ${mesa.value.trim()}\n`;
-                        } else if (document.getElementById('mesa-comanda')) {
-                            const mesaComanda = document.getElementById('mesa-comanda').value.trim();
-                            if (mesaComanda) {
-                                mensagem += `📌 *Mesa/Comanda*: ${mesaComanda}\n`;
-                            }
-                        }
-                    } else if (metodoEnvio === 'delivery') {
-                        mensagem += `🚗 *Entrega - Delivery*\n`;
-                        const endereco = document.getElementById('cliente-endereco');
-                        if (endereco && endereco.value.trim()) {
-                            mensagem += `🏠 *Endereço*: ${endereco.value.trim()}\n`;
-                        }
-                        // Removida a mensagem de taxa de entrega conforme solicitado
-                    } else if (metodoEnvio === 'retirada') {
-                        mensagem += `🛍️ *Cliente vai Retirar no Local*\n`;
-                    }
-                }
-                
-                // Observações gerais
-                const obsGerais = document.getElementById('cliente-obs');
-                if (obsGerais && obsGerais.value.trim()) {
-                    mensagem += `\n💬 *OBSERVAÇÕES*\n${obsGerais.value.trim()}\n`;
-                }
-                
-                // Lista de itens
-                mensagem += `\n🛒 *ITENS DO PEDIDO*\n`;
                 let valorTotal = 0;
-                
-                this.itens.forEach((item, index) => {
-                    // Calcular preço individual e total do item
+                const itensPedido = this.itens.map(item => {
                     const precoBase = item.precoBase || 0;
                     const precoAdicional = item.precoAdicional || 0;
                     const precoTotalItem = precoBase + precoAdicional;
-                    const precoTotalComQuantidade = precoTotalItem * item.quantidade;
-                    
-                    // Adicionar ao valor total do pedido
-                    valorTotal += precoTotalComQuantidade;
-                    
-                    // Formatar preços para exibição
-                    const precoFormatado = `R$ ${precoTotalItem.toFixed(2).replace('.', ',')}`;
-                    const precoTotalFormatado = `R$ ${precoTotalComQuantidade.toFixed(2).replace('.', ',')}`;
-                    
-                    // Adicionar informações do item à mensagem
-                    mensagem += `\n${index + 1}. ${item.titulo} (${item.quantidade}x) - ${precoFormatado}/un`;
-                    if (item.quantidade > 1) mensagem += ` - Total: ${precoTotalFormatado}`;
-                    if (item.precoAdicional > 0) mensagem += `\n   ℹ️ Com adição de R$ ${item.precoAdicional.toFixed(2).replace('.', ',')}`;
-                    if (item.observacao) mensagem += `\n   ➡️ _${item.observacao}_`;
-                    mensagem += `\n`;
+                    valorTotal += precoTotalItem * item.quantidade;
+                    return {
+                        id: item.id,
+                        titulo: item.titulo,
+                        quantidade: item.quantidade,
+                        preco_unitario: precoTotalItem,
+                        observacao: item.observacao || ''
+                    };
                 });
                 
-                // Adicionar valor total do pedido à mensagem
-                const valorTotalFormatado = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-                mensagem += `\n💰 *VALOR TOTAL:* ${valorTotalFormatado}\n`;
-                
-                mensagem += `\n✅ *Pedido Finalizado* - Aguardando confirmação do estabelecimento\n`;
-                mensagem += `\n👍 Obrigado pela preferência!`;
-                
-                
-                // Codificar mensagem para URL
-                const mensagemCodificada = encodeURIComponent(mensagem);
-                
-                // Número de WhatsApp do estabelecimento da planilha
-                const whatsappNumero = dadosGlobais.config['WhatsApp'];
-                if (!whatsappNumero) {
-                    alert('Número de WhatsApp não configurado na planilha.');
-                    return;
-                }
-                
-                // Remover caracteres não numéricos do número
-                const numeroLimpo = whatsappNumero.replace(/\D/g, '');
-                
-                // Detectar o dispositivo e enviar o pedido de forma adequada
-                enviarPedidoWhatsApp(numeroLimpo, mensagemCodificada);
-                
-                // Criar função para limpar tudo após um pequeno delay (para garantir que o WhatsApp foi aberto)
-                const limparTudoEResetar = () => {
-                    // Limpar o carrinho (isto remove os itens da memória)
-                    this.limpar();
-                    
-                    // Remover completamente do localStorage (para garantir reset completo)
-                    localStorage.removeItem('carrinho');
-                    
-                    // Resetar todos os inputs do formulário
-                    document.querySelectorAll('input[type="text"], input[type="tel"], textarea').forEach(input => {
-                        input.value = '';
-                    });
-                    
-                    document.querySelectorAll('select').forEach(select => {
-                        if (select.options.length > 0) {
-                            select.selectedIndex = 0;
-                        }
-                    });
-                    
-                    // Resetar opções de entrega
-                    document.querySelectorAll('input[name="metodo-envio"]').forEach(radio => {
-                        radio.checked = false;
-                    });
-                    
-                    // Fechar o modal e restaurar a rolagem
-                    fecharModal();
-                    
-                    // Garantir que a rolagem está habilitada
-                    document.body.classList.remove('overflow-hidden');
-                    document.documentElement.classList.remove('overflow-hidden');
-                    
-                    // Voltar para o step 1 para futuros pedidos
-                    Carrinho.mostrarStep(1);
-                    
-                    // Atualizar o contador do carrinho e botão flutuante
-                    atualizarContadorCarrinho();
-                    
-                    // Remover quaisquer classes ou estados que possam causar travamento
-                    document.querySelectorAll('.modal-fixed').forEach(modal => {
-                        modal.style.position = '';
-                    });
-                    
-                    console.log('Sistema resetado após envio do pedido');
+                const dadosCliente = {
+                    nome: nomeInput.value.trim(),
+                    telefone: ''
                 };
-                
-                // Executar a limpeza após um pequeno delay para garantir que o WhatsApp foi aberto
-                setTimeout(limparTudoEResetar, 500);
+
+                let dadosEntrega = {
+                    tipo: metodoEnvio,
+                    endereco: null,
+                    taxa: 0
+                };
+
+                if (metodoEnvio === 'delivery') {
+                    dadosEntrega.endereco = document.getElementById('cliente-endereco').value.trim();
+                    const taxaConfig = dadosGlobais.config['Step-2-taxa-delivery'];
+                    if (taxaConfig) {
+                        const valorTaxa = parseFloat(taxaConfig.replace(/[^0-9,.]/g, '').replace(',', '.'));
+                        if (!isNaN(valorTaxa)) {
+                            dadosEntrega.taxa = valorTaxa;
+                            valorTotal += valorTaxa;
+                        }
+                    }
+                } else if (metodoEnvio === 'local') {
+                    dadosEntrega.endereco = `Mesa/Comanda: ${document.getElementById('cliente-mesa')?.value.trim() || 'N/A'}`;
+                }
+
+                const dadosPagamento = {
+                    forma: formaPagamentoSelect.options[formaPagamentoSelect.selectedIndex].text,
+                    troco_para: null
+                };
+
+                const dadosPedido = {
+                    id_pedido: `pedido_${Date.now()}`,
+                    timestamp: agora.toISOString(),
+                    cliente: dadosCliente,
+                    itens: itensPedido,
+                    total: valorTotal,
+                    pagamento: dadosPagamento,
+                    entrega: dadosEntrega,
+                    observacoes_gerais: document.getElementById('cliente-obs')?.value.trim() || ''
+                };
+
+                this.enviarPedidoWebhook(dadosPedido);
             }
             
         };
