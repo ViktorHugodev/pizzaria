@@ -46,10 +46,12 @@ const CONFIG_COMPARTILHAMENTO = {
 
 // URLs das planilhas Google Sheets
 const CONFIG_PLANILHAS = {
+  itens:
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=0&single=true&output=csv',
 
-  itens: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=1295535088&single=true&output=csv',
+  categorias:
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=1295535088&single=true&output=csv',
 
-  categorias: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=0&single=true&output=csv',
- 
-  config: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=1253815997&single=true&output=csv'
-};
+  config:
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZz2e1nWfKtYdV5bBElMApu1vNJrJdP7qv356J5k-uLeUeoEJFGTuUJH8CjnyO3QI-8XT98D7RO4oO/pub?gid=1253815997&single=true&output=csv'
+}
